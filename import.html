@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Import Codex vào 9router</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0a0a;color:#e0e0e0;min-height:100vh;display:flex;justify-content:center;padding:20px}
+.container{max-width:600px;width:100%}
+h1{font-size:24px;margin-bottom:8px;color:#fff}
+.subtitle{color:#888;margin-bottom:24px;font-size:14px}
+.dropzone{border:2px dashed #333;border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+.dropzone:hover,.dropzone.active{border-color:#4f9cf7;background:rgba(79,156,247,.05)}
+.dropzone-icon{font-size:48px;margin-bottom:12px}
+.dropzone-text{color:#888;font-size:14px}
+.dropzone-text strong{color:#4f9cf7}
+.file-info{background:#111;border:1px solid #222;border-radius:8px;padding:12px;margin-bottom:16px;font-size:13px;display:none}
+.file-info.show{display:block}
+.accounts{margin-bottom:16px}
+.account{background:#111;border:1px solid #222;border-radius:8px;padding:12px;margin-bottom:8px}
+.account-email{font-weight:600;color:#4f9cf7;font-size:14px}
+.account-meta{color:#888;font-size:12px;margin-top:4px}
+.account-meta span{margin-right:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-team{background:#1a3a2a;color:#4ade80}
+.badge-free{background:#3a2a1a;color:#fbbf24}
+.badge-plus{background:#2a1a3a;color:#a78bfa}
+.badge-expired{background:#3a1a1a;color:#f87171}
+.badge-ok{background:#1a2a3a;color:#60a5fa}
+.section-title{font-size:14px;font-weight:600;color:#fff;margin-bottom:12px}
+.db-section{background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin-bottom:16px}
+.db-section h3{font-size:14px;margin-bottom:8px}
+.db-section p{font-size:12px;color:#888;margin-bottom:12px}
+.btn{display:inline-block;padding:10px 20px;border-radius:8px;border:none;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:#4f9cf7;color:#fff}
+.btn-primary:hover{background:#3b82f6}
+.btn-primary:disabled{background:#333;color:#666;cursor:not-allowed}
+.btn-secondary{background:#222;color:#e0e0e0;border:1px solid #333}
+.btn-secondary:hover{background:#333}
+.btn-row{display:flex;gap:8px;margin-top:12px}
+.merge-result{background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin-bottom:16px;display:none}
+.merge-result.show{display:block}
+.merge-result h3{font-size:14px;margin-bottom:8px}
+.stat{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.stat-label{color:#888}
+.stat-value{color:#fff;font-weight:600}
+.instructions{background:#111;border:1px solid #222;border-radius:8px;padding:16px;margin-bottom:16px}
+.instructions h3{font-size:14px;margin-bottom:8px}
+.instructions ol{padding-left:20px;font-size:13px;color:#888}
+.instructions li{margin-bottom:6px}
+.instructions code{background:#222;padding:2px 6px;border-radius:4px;font-size:12px;color:#4f9cf7}
+.error{background:#3a1a1a;border:1px solid #5a2a2a;border-radius:8px;padding:12px;margin-bottom:16px;color:#f87171;font-size:13px;display:none}
+.error.show{display:block}
+.footer{text-align:center;color:#444;font-size:11px;margin-top:24px}
+input[type="file"]{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🤖 Import Codex</h1>
+  <p class="subtitle">Import ChatGPT Codex credentials vào 9router</p>
+
+  <div id="error" class="error"></div>
+
+  <div class="section-title">Bước 1: Chọn file credentials</div>
+  <div id="dropzone" class="dropzone" onclick="document.getElementById('tokenInput').click()">
+    <div class="dropzone-icon">📁</div>
+    <div class="dropzone-text">Kéo thả file <strong>.json</strong> vào đây<br>hoặc click để chọn</div>
+  </div>
+  <input type="file" id="tokenInput" accept=".json" multiple>
+
+  <div id="fileInfo" class="file-info"></div>
+  <div id="accounts" class="accounts"></div>
+
+  <div id="dbSection" class="db-section" style="display:none">
+    <h3>Bước 2: Nguồn dữ liệu</h3>
+    <div id="serverStatus" style="display:none">
+      <p>🟢 Đã kết nối server — db.json tự động phát hiện</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="serverMerge()" style="width:100%">🔄 Merge vào db.json</button>
+      </div>
+    </div>
+    <div id="localMode">
+      <p>Chọn db.json hiện tại hoặc dùng template trống.</p>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="document.getElementById('dbInput').click()">📤 Upload db.json</button>
+        <button class="btn btn-secondary" onclick="useEmptyDb()">📄 Dùng template trống</button>
+      </div>
+      <input type="file" id="dbInput" accept=".json">
+    </div>
+  </div>
+
+  <div id="mergeResult" class="merge-result"></div>
+
+  <div id="downloadSection" style="display:none">
+    <div class="section-title">Bước 3: Tải file và import</div>
+    <div id="saveServer" style="display:none">
+      <button class="btn btn-primary" onclick="serverSave()" style="width:100%;margin-bottom:12px">💾 Lưu trực tiếp vào 9router</button>
+      <p style="font-size:12px;color:#888;text-align:center">Hoặc tải file thủ công bên dưới</p>
+    </div>
+    <div class="instructions">
+      <h3>Hướng dẫn (nếu tải thủ công)</h3>
+      <ol>
+        <li>Tắt 9router</li>
+        <li>Nhấn nút bên dưới để tải <code>db.json</code></li>
+        <li>Copy file vừa tải vào <code>~/AppData/Roaming/9router/</code></li>
+        <li>Mở lại 9router</li>
+      </ol>
+    </div>
+    <button class="btn btn-secondary" onclick="downloadDb()" style="width:100%">📥 Tải db.json thủ công</button>
+  </div>
+
+  <div class="footer">Tool import Codex cho 9router</div>
+</div>
+
+<script>
+let parsedAccounts = [];
+let currentDb = null;
+let mergedDb = null;
+
+function decodeJwt(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const padded = payload + '='.repeat((4 - payload.length % 4) % 4);
+    return JSON.parse(atob(padded));
+  } catch { return null; }
+}
+
+function parseTokenFile(text) {
+  let data;
+  try { data = JSON.parse(text); } catch { return { error: 'JSON không hợp lệ' }; }
+
+  if (!Array.isArray(data)) {
+    if (typeof data === 'object' && data.access_token) {
+      data = [data];
+    } else {
+      return { error: 'File phải là array hoặc object có access_token' };
+    }
+  }
+
+  const accounts = [];
+  for (const item of data) {
+    if (!item.access_token || !item.refresh_token) continue;
+
+    const idClaims = decodeJwt(item.id_token) || {};
+    const auth = idClaims['https://api.openai.com/auth'] || {};
+    const profile = idClaims['https://api.openai.com/profile'] || {};
+
+    const plan = auth.chatgpt_plan_type || 'unknown';
+    const accountId = auth.chatgpt_account_id || item.account_id || '';
+    const email = idClaims.email || profile.email || item.email || item.outlook_email || '';
+
+    let expiresAt = item.expired || null;
+    if (!expiresAt && item.last_refresh) {
+      const t = new Date(item.last_refresh);
+      t.setDate(t.getDate() + 10);
+      expiresAt = t.toISOString();
+    }
+
+    accounts.push({
+      access_token: item.access_token,
+      refresh_token: item.refresh_token,
+      id_token: item.id_token || '',
+      account_id: accountId,
+      email: email,
+      plan: plan,
+      expires_at: expiresAt,
+    });
+  }
+
+  return { accounts };
+}
+
+function to9routerEntry(acc, priority) {
+  return {
+    id: crypto.randomUUID(),
+    provider: 'codex',
+    authType: 'oauth',
+    name: acc.email,
+    email: acc.email,
+    priority: priority,
+    isActive: 1,
+    data: JSON.stringify({
+      accessToken: acc.access_token,
+      refreshToken: acc.refresh_token,
+      expiresAt: acc.expires_at,
+      tokenType: 'Bearer',
+      testStatus: 'active',
+      providerSpecificData: {
+        chatgptAccountId: acc.account_id,
+        chatgptPlanType: acc.plan,
+        authMethod: 'imported',
+      },
+    }),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function mergeIntoDb(db, accounts) {
+  if (!db.providerConnections) db.providerConnections = [];
+
+  const existingEmails = new Set(
+    db.providerConnections.filter(c => c.provider === 'codex').map(c => (c.email || '').toLowerCase())
+  );
+  const existingTokens = new Set(
+    db.providerConnections.filter(c => c.provider === 'codex').map(c => {
+      try { return JSON.parse(c.data).accessToken; } catch { return ''; }
+    }).filter(Boolean)
+  );
+
+  let maxPriority = db.providerConnections
+    .filter(c => c.provider === 'codex')
+    .reduce((max, c) => Math.max(max, c.priority || 0), 0);
+
+  let added = 0, skipped = 0;
+  for (const acc of accounts) {
+    if (existingEmails.has(acc.email.toLowerCase()) || existingTokens.has(acc.access_token)) {
+      skipped++;
+      continue;
+    }
+    maxPriority++;
+    db.providerConnections.push(to9routerEntry(acc, maxPriority));
+    existingEmails.add(acc.email.toLowerCase());
+    existingTokens.add(acc.access_token);
+    added++;
+  }
+
+  return { added, skipped };
+}
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function hideError() {
+  document.getElementById('error').classList.remove('show');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderAccounts(accounts) {
+  const container = document.getElementById('accounts');
+  container.innerHTML = '';
+  for (const acc of accounts) {
+    const isExpired = acc.expires_at && new Date(acc.expires_at) < new Date();
+    const planClass = acc.plan === 'team' ? 'badge-team' : acc.plan === 'plus' ? 'badge-plus' : 'badge-free';
+    const statusClass = isExpired ? 'badge-expired' : 'badge-ok';
+    const div = document.createElement('div');
+    div.className = 'account';
+    div.innerHTML = `
+      <div class="account-email">${escHtml(acc.email)}</div>
+      <div class="account-meta">
+        <span class="badge ${planClass}">${acc.plan}</span>
+        <span class="badge ${statusClass}">${isExpired ? 'Hết hạn' : 'Còn hạn'}</span>
+        ${acc.expires_at ? `<span>${new Date(acc.expires_at).toLocaleDateString('vi-VN')}</span>` : ''}
+      </div>`;
+    container.appendChild(div);
+  }
+}
+
+const dropzone = document.getElementById('dropzone');
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('active'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('active'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('active');
+  handleTokenFiles(e.dataTransfer.files);
+});
+
+document.getElementById('tokenInput').addEventListener('change', e => handleTokenFiles(e.target.files));
+
+function handleTokenFiles(files) {
+  hideError();
+  parsedAccounts = [];
+  let loaded = 0;
+  const allAccounts = [];
+  for (const file of files) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const result = parseTokenFile(e.target.result);
+      if (result.error) { showError(result.error); return; }
+      allAccounts.push(...result.accounts);
+      loaded++;
+      if (loaded === files.length) {
+        parsedAccounts = allAccounts;
+        document.getElementById('fileInfo').textContent = `📄 ${files.length} file — Tìm thấy ${allAccounts.length} tài khoản`;
+        document.getElementById('fileInfo').classList.add('show');
+        renderAccounts(allAccounts);
+        document.getElementById('dbSection').style.display = 'block';
+      }
+    };
+    reader.readAsText(file);
+  }
+}
+
+document.getElementById('dbInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try { currentDb = JSON.parse(ev.target.result); doMerge(); }
+    catch { showError('db.json không hợp lệ'); }
+  };
+  reader.readAsText(file);
+});
+
+function useEmptyDb() {
+  currentDb = { providerConnections: [], providerNodes: [], proxyPools: [], modelAliases: [], mitmAlias: [], combos: [], apiKeys: [], settings: {}, pricing: {} };
+  doMerge();
+}
+
+function doMerge() {
+  hideError();
+  const result = mergeIntoDb(currentDb, parsedAccounts);
+  mergedDb = currentDb;
+  showMergeResult(result.added, result.skipped, mergedDb.providerConnections.length);
+}
+
+function downloadDb() {
+  if (!mergedDb) return;
+  const blob = new Blob([JSON.stringify(mergedDb, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'db.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Server mode ───
+const isServer = location.protocol === 'http:' || location.protocol === 'https:';
+let serverDb = null;
+
+async function checkServer() {
+  if (!isServer) return;
+  try {
+    const res = await fetch('/api/db-status');
+    const data = await res.json();
+    if (data.exists) {
+      document.getElementById('serverStatus').style.display = 'block';
+      document.getElementById('localMode').style.display = 'none';
+      serverDb = data.connections;
+    }
+  } catch {}
+}
+
+async function serverMerge() {
+  hideError();
+  const tokenText = JSON.stringify(parsedAccounts.map(a => ({
+    access_token: a.access_token, refresh_token: a.refresh_token,
+    id_token: a.id_token, account_id: a.account_id, email: a.email,
+    expired: a.expires_at, type: 'codex',
+  })));
+  try {
+    const res = await fetch('/api/merge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tokens: tokenText }),
+    });
+    const data = await res.json();
+    if (data.error) { showError(data.error); return; }
+    mergedDb = data.db;
+    showMergeResult(data.added, data.skipped, mergedDb.providerConnections.length);
+    document.getElementById('saveServer').style.display = 'block';
+  } catch (e) { showError('Lỗi kết nối server: ' + e.message); }
+}
+
+async function serverSave() {
+  if (!mergedDb) return;
+  try {
+    const res = await fetch('/api/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ db: mergedDb }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      alert('✅ Đã lưu vào ' + data.path + '\nKhởi động lại 9router để áp dụng.');
+    } else {
+      showError('Lỗi lưu: ' + data.error);
+    }
+  } catch (e) { showError('Lỗi kết nối server: ' + e.message); }
+}
+
+function showMergeResult(added, skipped, total) {
+  const div = document.getElementById('mergeResult');
+  div.innerHTML = `
+    <h3>Kết quả merge</h3>
+    <div class="stat"><span class="stat-label">Thêm mới</span><span class="stat-value">${added}</span></div>
+    <div class="stat"><span class="stat-label">Bỏ qua (trùng)</span><span class="stat-value">${skipped}</span></div>
+    <div class="stat"><span class="stat-label">Tổng connections</span><span class="stat-value">${total}</span></div>`;
+  div.classList.add('show');
+  document.getElementById('downloadSection').style.display = 'block';
+}
+
+// Auto-check server on load
+checkServer();
+</script>
+</body>
+</html>
