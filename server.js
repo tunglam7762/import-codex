@@ -9,7 +9,51 @@ const crypto = require('crypto');
 
 const APPDATA = process.env.APPDATA || path.join(os.homedir(), 'AppData', 'Roaming');
 const DB_JSON_PATH = path.join(APPDATA, '9router', 'db.json');
+const DB_SQLITE_PATH = path.join(os.homedir(), 'Documents', '9router', 'data', 'db', 'data.sqlite');
 const PORT = 3456;
+
+function getDbPath() {
+  if (fs.existsSync(DB_SQLITE_PATH)) return DB_SQLITE_PATH;
+  if (fs.existsSync(DB_JSON_PATH)) return DB_JSON_PATH;
+  return DB_JSON_PATH;
+}
+
+function isSqlite(p) { return p.endsWith('.sqlite'); }
+
+function loadDb(dbPath) {
+  if (isSqlite(dbPath)) {
+    let Database;
+    try { Database = require('better-sqlite3'); } catch {
+      try { Database = require(path.join(os.homedir(), 'Documents', '9router', 'node_modules', 'better-sqlite3')); } catch {
+        throw new Error('better-sqlite3 not found');
+      }
+    }
+    const db = new Database(dbPath, { readonly: true });
+    const rows = db.prepare('SELECT * FROM providerConnections').all();
+    db.close();
+    const connections = rows.map(r => ({ ...r, data: typeof r.data === 'string' ? r.data : JSON.stringify(r.data) }));
+    return { providerConnections: connections };
+  }
+  return JSON.parse(fs.readFileSync(dbPath, 'utf-8'));
+}
+
+function saveDb(dbPath, data) {
+  if (isSqlite(dbPath)) {
+    let Database;
+    try { Database = require('better-sqlite3'); } catch {
+      try { Database = require(path.join(os.homedir(), 'Documents', '9router', 'node_modules', 'better-sqlite3')); } catch {
+        throw new Error('better-sqlite3 not found');
+      }
+    }
+    const db = new Database(dbPath);
+    const insert = db.prepare('INSERT OR REPLACE INTO providerConnections (id, provider, authType, name, email, priority, isActive, data, createdAt, updatedAt) VALUES (@id, @provider, @authType, @name, @email, @priority, @isActive, @data, @createdAt, @updatedAt)');
+    const tx = db.transaction((rows) => { for (const r of rows) insert.run(r); });
+    tx(data.providerConnections || []);
+    db.close();
+  } else {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+  }
+}
 
 function decodeJwt(token) {
   try {
@@ -114,14 +158,17 @@ const server = http.createServer((req, res) => {
         let db;
         if (dbContent) {
           db = JSON.parse(dbContent);
-        } else if (fs.existsSync(DB_JSON_PATH)) {
-          db = JSON.parse(fs.readFileSync(DB_JSON_PATH, 'utf-8'));
         } else {
-          db = { providerConnections: [], providerNodes: [], proxyPools: [], modelAliases: [], mitmAlias: [], combos: [], apiKeys: [], settings: {}, pricing: {} };
+          const dbPath = getDbPath();
+          if (fs.existsSync(dbPath)) {
+            db = loadDb(dbPath);
+          } else {
+            db = { providerConnections: [] };
+          }
         }
         const result = mergeIntoDb(db, parseResult.accounts);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ...result, db }));
+        res.end(JSON.stringify({ ...result, db, dbPath: getDbPath() }));
       } catch (e) {
         res.writeHead(400, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: e.message }));
@@ -136,13 +183,14 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const { db } = JSON.parse(body);
-        if (fs.existsSync(DB_JSON_PATH)) {
-          const bak = DB_JSON_PATH + '.bak-' + new Date().toISOString().replace(/[:.]/g, '-');
-          fs.copyFileSync(DB_JSON_PATH, bak);
+        const dbPath = getDbPath();
+        if (fs.existsSync(dbPath)) {
+          const bak = dbPath + '.bak-' + new Date().toISOString().replace(/[:.]/g, '-');
+          fs.copyFileSync(dbPath, bak);
         }
-        fs.writeFileSync(DB_JSON_PATH, JSON.stringify(db, null, 2));
+        saveDb(dbPath, db);
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ ok: true, path: DB_JSON_PATH }));
+        res.end(JSON.stringify({ ok: true, path: dbPath }));
       } catch (e) {
         res.writeHead(500, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: e.message }));
@@ -152,16 +200,17 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'GET' && req.url === '/api/db-status') {
-    const exists = fs.existsSync(DB_JSON_PATH);
+    const dbPath = getDbPath();
+    const exists = fs.existsSync(dbPath);
     let connections = 0;
     if (exists) {
       try {
-        const db = JSON.parse(fs.readFileSync(DB_JSON_PATH, 'utf-8'));
+        const db = loadDb(dbPath);
         connections = (db.providerConnections || []).length;
       } catch {}
     }
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ exists, path: DB_JSON_PATH, connections }));
+    res.end(JSON.stringify({ exists, path: dbPath, connections }));
     return;
   }
 
@@ -170,7 +219,9 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
+  const dbPath = getDbPath();
   console.log(`🚀 Import Codex server: http://localhost:${PORT}`);
-  console.log(`📂 DB path: ${DB_JSON_PATH}`);
+  console.log(`📂 DB path: ${dbPath}`);
+  console.log(`📋 DB type: ${isSqlite(dbPath) ? 'SQLite' : 'JSON'}`);
   console.log(`\nMở trình duyệt → http://localhost:${PORT}`);
 });
