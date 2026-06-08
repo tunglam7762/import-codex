@@ -83,18 +83,23 @@ Bot nhả file `.json` dạng array (kể cả mua 1 acc):
 ```json
 [
   {
-    "access_token": "eyJ...",
-    "refresh_token": "rt.1...",
-    "id_token": "eyJ...",
-    "account_id": "5683b77b-...",
+    "access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjE5MzQ0ZTY1LWJiYzktNDRkMS1hOWQwLWY5NTdiMDc5YmQwZSIsInR5cCI6IkpXVCJ9.eyJhdWQiOlsiaHR0cHM6Ly9hcGkub3BlbmFpLmNvbS92MSJdLCJjbGllbnRfaWQiOiJhcHBfRU1vYW1FRVo3M2YwQ2tYYVhwN2hyYW5uIiwiZXhwIjoxNzgxNTQyMTIxLCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoiNTY4M2I3N2ItMjMyNi00Njg4LWFkYzctNjk0ZmZjNDNjN2FjIiwiY2hhdGdwdF9hY2NvdW50X3VzZXJfaWQiOiJ1c2VyLVZ1a3VwVndJS0VicllsTk93akFnUWJGYyIsImxvY2FsaG9zdCI6dHJ1ZSwic3NvX2Nvbm5lY3Rpb25faWQiOiJjb25uXzAxS1Q5WVZIRVZZWDNWNE1LMEE1SjlSNEVaIiwidXNlcl9pZCI6InVzZXItVnVrdXBWd0lLRWJyWWxOT3dqQWdRYkZjIn0sImh0dHBzOi8vYXBpLm9wZW5haS5jb20vcHJvZmlsZSI6eyJlbWFpbCI6Im1haWxwbWtsbnlpZDB3QHRlYW0ud2VuamllLmNvZGVzIiwiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJpYXQiOjE3ODA2NzgxMjAsImlzcyI6Imh0dHBzOi8vYXV0aC5vcGVuYWkuY29tIiwianRpIjoiZWNiYjNlY2YtMzRiMC00ZWRhLTg3MTUtMjg5MmU1NWZmYzgzIiwibmJmIjoxNzgwNjc4MTIwLCJwd2RfYXV0aF90aW1lIjoxNzgwNjc4MTE5MDE3LCJzY3AiOlsib3BlbmlkIiwicHJvZmlsZSIsImVtYWlsIiwib2ZmbGluZV9hY2Nlc3MiXSwic2Vzc2lvbl9pZCI6ImF1dGhzZXNzX2RsNzlZaWRiMXhoS01hSjZDREN2T1RnOSIsInNsIjp0cnVlLCJzdWIiOiJzYW1scHxwcm9mXzAxS1RDQVZCV1RZWEJYRTVERDNaRk1DVjBBfG1haWxwbWtsbnlpZDB3QHRlYW0ud2VuamllLmNvZGVzIn0.SAMPLE_SIGNATURE",
+    "refresh_token": "rt.1.AABQLGoNwvD44ogWZlqWBW2FiHPByWwKue0B3B54CUCPK6zUb2H2nhDwGv0GZtwdk4_KHbLfqPOJYqwEzooNTaQfumDW5quW4tJVczWGvrBS3k2hqZCy4iQ_Y76YmFdzRUSm7UDNf23e3h89wcrDsMSNBH26jCzplk7n0BGqk1pxsVB7nf_cpmNmKGe6HfLvIfP4ZwFvRM53_pruL1aVXQNia6Kmuh4RX9ABWCeZF62jvBkGOhZJ3xScQrin8FCfNfFmXw3wgq5B21pQ6Co85zgNJ5Ny8MIMur52x1oMLeGla4ycctyYIGopnZNlwHFPMxI",
+    "id_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6ImIxZGQzZjhmLTlhYWQtNDdmZS1iMGU3LWVkYjAwOTc3N2Q2YiIsInR5cCI6IkpXVCJ9.eyJhdF9oYXNoIjoiUTZLdF9hNkVKcjJucGJNYzJrMGZIdyIsImF1ZCI6WyJhcHBfRU1vYW1FRVo3M2YwQ2tYYVhwN2hyYW5uIl0sImF1dGhfcHJvdmlkZXIiOiJ3b3Jrb3MiLCJhdXRoX3RpbWUiOjE3ODA2NzgxMTksImVtYWlsIjoibWFpbHBta2xueWlkMHdAdGVhbS53ZW5qaWUuY29kZXMiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwiZXhwIjoxNzgwNjgxNzIwLCJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoiNTY4M2I3N2ItMjMyNi00Njg4LWFkYzctNjk0ZmZjNDNjN2FjIiwiY2hhdGdwdF9wbGFuX3R5cGUiOiJ0ZWFtIiwidXNlcl9pZCI6InVzZXItVnVrdXBWd0lLRWJyWWxOT3dqQWdRYkZjIn0sImh0dHBzOi8vYXBpLm9wZW5haS5jb20vcHJvZmlsZSI6eyJlbWFpbCI6Im1haWxwbWtsbnlpZDB3QHRlYW0ud2VuamllLmNvZGVzIiwiZW1haWxfdmVyaWZpZWQiOnRydWV9LCJpYXQiOjE3ODA2NzgxMjAsImlzcyI6Imh0dHBzOi8vYXV0aC5vcGVuYWkuY29tIiwianRpIjoiODhjZDA5ZGQtNjU2NS00M2QwLWE2NjctYjM0NjhjMzRjYzZlIiwibmFtZSI6Im1haWxwbWtsbnlpZHciLCJzdWIiOiJzYW1scHxwcm9mXzAxS1RDQVZCV1RZWEJYRTVERDNaRk1DVjBBfG1haWxwbWtsbnlpZDB3QHRlYW0ud2VuamllLmNvZGVzIn0.SAMPLE_SIGNATURE",
+    "account_id": "5683b77b-2326-4688-adc7-694ffc43c7ac",
     "email": "mailxxx@team.wenjie.codes",
-    "expired": "2026-06-15T16:48:41Z",
+    "outlook_email": "mailxxx@team.wenjie.codes",
+    "expired": "2026-06-15T16:48:41.571301+00:00",
+    "last_refresh": "2026-06-05T16:48:41.571334+00:00",
+    "disabled": false,
+    "oai_password": "YourPassword123",
+    "status": "success",
     "type": "codex"
   }
 ]
 ```
 
-Tool tự động decode JWT → lấy plan type, account ID.
+Tool tự động decode JWT từ `id_token` → lấy `chatgpt_plan_type` (team/free/plus), `chatgpt_account_id`.
 
 ## Quy trình
 
